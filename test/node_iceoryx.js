@@ -8,12 +8,12 @@ const canTopicCallback = (data, data2) => {
 }
 
 if(appArgs[1] === "subscriber") {
-    const service = new iceoryx.IceoryxSubscriber(["CanP3comBridge", "listener", "can-topic"], canTopicCallback);
+    const service = new iceoryx.IceoryxSubscriber(["Test-app", "Test-group", "topic"], canTopicCallback);
     process.on("exit", () => {
         console.log(service);
     })
 } else {
-    const publisher = new iceoryx.IceoryxPublisher(["CanP3comBridge", "listener", "can-topic"], canTopicCallback);
+    const publisher = new iceoryx.IceoryxPublisher(["Test-app", "Test-group", "topic"], canTopicCallback);
     let iteration = 0;
     setInterval(() => {
         const obj = {
