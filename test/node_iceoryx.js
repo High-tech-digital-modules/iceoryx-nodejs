@@ -21,11 +21,13 @@ if(appArgs[1] === "subscriber") {
             iteration
         }
         const str = JSON.stringify(obj);
-        publisher.getLoanBuffer(str.length, (data) => {
-            data.fill(str);
-            iteration++;
-            publisher.publish(data);
-        })
+        publisher.loan(str.length)
+            .then((data) => {
+                data.fill(str);
+                iteration++;
+                publisher.publish(data);
+            })
+            .catch(err => console.log(err))
     }, 100);
 }
 

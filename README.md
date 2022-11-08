@@ -47,14 +47,17 @@ if(appArgs[1] === "subscriber") {
             iteration
         }
         const str = JSON.stringify(obj);
-        publisher.getLoanBuffer(str.length, (data) => {
-            // We must fill data into received buffer
-            data.fill(str);
-            iteration++;
-            // This can't be called without data received by function getLoanBuffer
-            // There is buffer which has memory address from iox shared memory
-            publisher.publish(data);
-        })
+        publisher.loan(str.length)
+            .then((data) => {
+                // We must fill data into received buffer
+                data.fill(str);
+                iteration++;
+                // This can't be called without data received by function getLoanBuffer
+                // There is buffer which has memory address from iox shared memory
+                // Multiple call of loan without pusblish will lead to not getting buffer
+                publisher.publish(data);
+            })
+            .catch(err => console.log(err))
     }, 100);
 }
 

@@ -6,7 +6,7 @@ Napi::Object IceoryxPublisher::Init(Napi::Env env, Napi::Object exports) {
       DefineClass(env,
                   "IceoryxPublisher",
                   {
-                      InstanceMethod("getLoanBuffer", &IceoryxPublisher::GetLoanBuffer),
+                      InstanceMethod("loan", &IceoryxPublisher::GetLoanBuffer),
                       InstanceMethod("publish", &IceoryxPublisher::PublishData)
                   });
       
@@ -41,28 +41,28 @@ IceoryxPublisher::IceoryxPublisher(const Napi::CallbackInfo& info) : Napi::Objec
     });
 }
 
-void IceoryxPublisher::GetLoanBuffer(const Napi::CallbackInfo& info) {
+Napi::Value IceoryxPublisher::GetLoanBuffer(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
     
     int length = info.Length();
     
-    if (length <= 1 || !info[0].IsNumber() || !info[1].IsFunction()) {
-        Napi::TypeError::New(env, "Wrong paramemters").ThrowAsJavaScriptException();
-        return;
+    Napi::Promise::Deferred lDeferred = Napi::Promise::Deferred::New(env);
+    
+    if (length <= 0 || !info[0].IsNumber()) {
+        lDeferred.Reject(Napi::String::New(info.Env(), "Wrong paramemters"));
+        return lDeferred.Promise();
     }
     
     double lSize = info[0].As<Napi::Number>().DoubleValue();
-    Napi::Function lCallback = info[1].As<Napi::Function>();
     m_publisher->loan(lSize)
         .and_then([&](auto& userPayload) {
             Napi::Buffer<uint8_t> lData = Napi::Buffer<uint8_t>::New(env, (uint8_t*)userPayload, lSize);
-            lCallback.Call({lData});
-            // Important to release it here otherwise with same iceoryx pointer is crashing
-            lData.ArrayBuffer().Detach();
+            lDeferred.Resolve(lData);
         })
         .or_else([&](auto& error) {
-            // ...
+            lDeferred.Reject(Napi::String::New(info.Env(), "Unable to get loan"));
         });
+    return lDeferred.Promise();
     
 }
 
@@ -78,6 +78,8 @@ void IceoryxPublisher::PublishData(const Napi::CallbackInfo& info) {
     
     Napi::Buffer<uint8_t> lData = info[0].As<Napi::Buffer<uint8_t>>();
     m_publisher->publish(lData.Data());
+    // Important to release it here otherwise with same iceoryx pointer is crashing
+    lData.ArrayBuffer().Detach();
     
 }
 

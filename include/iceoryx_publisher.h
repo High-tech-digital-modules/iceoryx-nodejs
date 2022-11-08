@@ -19,12 +19,10 @@ class IceoryxPublisher : public Napi::ObjectWrap<IceoryxPublisher>
     
     ~IceoryxPublisher();
     
-    void GetLoanBuffer(const Napi::CallbackInfo& info);
+    Napi::Value GetLoanBuffer(const Napi::CallbackInfo& info);
     
     void PublishData(const Napi::CallbackInfo& info);
     
-    //Napi::ThreadSafeFunction m_loan_callback;
-
   private:
     iox::popo::UntypedPublisher *m_publisher;
     Napi::Buffer<uint8_t> m_loan_buffer;
